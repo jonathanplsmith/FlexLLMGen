@@ -9,6 +9,7 @@ import os
 import pickle
 import time
 from typing import Union, List, Optional
+import psutil
 
 import numpy as np
 from tqdm import tqdm
@@ -1191,6 +1192,8 @@ def run_flexllmgen(args):
 
     gpu = TorchDevice("cuda:0")
     cpu = TorchDevice("cpu")
+    p = psutil.Process()
+    p.cpu_affinity(list(range(0, 72)))
     disk = TorchDisk(args.offload_dir)
     env = ExecutionEnv(gpu=gpu, cpu=cpu, disk=disk, mixed=TorchMixedDevice([gpu, cpu, disk]))
 

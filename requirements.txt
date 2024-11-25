@@ -1,0 +1,6 @@
+setuptools >= 61.0
+transformers >= 4.24
+numpy
+tqdm
+pulp
+attrs
