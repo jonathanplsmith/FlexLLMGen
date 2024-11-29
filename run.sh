@@ -1,1 +1,1 @@
-python3 -m flexllmgen.flex_opt --model facebook/opt-66b --percent 0 100 0 100 0 100 --path _DUMMY_ --verbose 1
+python3 -m flexllmgen.flex_opt --model facebook/opt-30b --percent 100 0 100 0 100 0 --path _DUMMY_ --debug fewer_batch --gpu-batch-size 4 --num-gpu-batches 2 --sep-layer False --pin-weight False --cpu-cache-compute 

@@ -1,4 +1,5 @@
 import argparse
+import tqdm
 from dataclasses import dataclass
 
 from flexllmgen.utils import run_cmd
@@ -163,7 +164,7 @@ class ExpConfig:
         self.percent = percent
     
     def get_cmd(self):
-        return f"--model {self.model_name} --path _DUMMY_ --offload-dir /capstor/scratch/cscs/jsmith/flexllmgen_offload_dir/ --prompt-len {self.prompt_len} --gen-len {self.gen_len} --percent {self.percent[0]} {self.percent[1]} {self.percent[2]} {self.percent[3]} {self.percent[4]} {self.percent[5]} --gpu-batch-size {self.gbs} --num-gpu-batches {self.nbatch}"
+        return f"--model {self.model_name} --path _DUMMY_ --offload-dir /capstor/scratch/cscs/jsmith/flexllmgen_offload_dir/ --prompt-len {self.prompt_len} --gen-len {self.gen_len} --percent {self.percent[0]} {self.percent[1]} {self.percent[2]} {self.percent[3]} {self.percent[4]} {self.percent[5]} --gpu-batch-size {self.gbs} --num-gpu-batches {self.nbatch} --debug fewer_batch"
 
 GiB = 1<<30
 
@@ -181,12 +182,12 @@ def invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb):
     cpu_total = kv_cache_total * ratio_cpu_kv + model_total * ratio_cpu_w
     return (gpu_total <= (90*GiB)) and (cpu_total <= (100*GiB))
 
-prompt_lens = [161]
-gen_lens = [338]
+prompt_lens = [1024]
+gen_lens = [1024]
 kv_ratios = [(100, 0)]
 actv_ratios = [(100, 0)]
 gpu_block_sizes = [4, 8, 16, 32, 64, 128, 256]
-num_gpu_blocks = [3, 8, 12, 24]
+num_gpu_blocks = [1, 2, 3, 4, 8, 12, 16]
 
 suite_30b_allcpu = [
     Case(ExpConfig(prompt_len=prompt_len, gen_len=gen_len, gbs=gbs, nbatch=ngb, percent=(wr[0], wr[1], kvr[0], kvr[1], ar[0], ar[1]), model_name="facebook/opt-30b").get_cmd())
@@ -200,8 +201,60 @@ suite_30b_allcpu = [
     if invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb)
 ]
 
+suite_30b_2575 = [
+    Case(ExpConfig(prompt_len=prompt_len, gen_len=gen_len, gbs=gbs, nbatch=ngb, percent=(wr[0], wr[1], kvr[0], kvr[1], ar[0], ar[1]), model_name="facebook/opt-30b").get_cmd())
+    for prompt_len in prompt_lens
+    for gen_len in gen_lens
+    for wr in [(25, 75)]
+    for kvr in kv_ratios
+    for ar in actv_ratios
+    for gbs in gpu_block_sizes
+    for ngb in num_gpu_blocks
+    if invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb)
+]
+
+suite_30b_5050 = [
+    Case(ExpConfig(prompt_len=prompt_len, gen_len=gen_len, gbs=gbs, nbatch=ngb, percent=(wr[0], wr[1], kvr[0], kvr[1], ar[0], ar[1]), model_name="facebook/opt-30b").get_cmd())
+    for prompt_len in prompt_lens
+    for gen_len in gen_lens
+    for wr in [(50, 50)]
+    for kvr in kv_ratios
+    for ar in actv_ratios
+    for gbs in gpu_block_sizes
+    for ngb in num_gpu_blocks
+    if invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb)
+]
+
+suite_30b_7525 = [
+    Case(ExpConfig(prompt_len=prompt_len, gen_len=gen_len, gbs=gbs, nbatch=ngb, percent=(wr[0], wr[1], kvr[0], kvr[1], ar[0], ar[1]), model_name="facebook/opt-30b").get_cmd())
+    for prompt_len in prompt_lens
+    for gen_len in gen_lens
+    for wr in [(75, 25)]
+    for kvr in kv_ratios
+    for ar in actv_ratios
+    for gbs in gpu_block_sizes
+    for ngb in num_gpu_blocks
+    if invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb)
+]
+
+suite_30b_allgpu = [
+    Case(ExpConfig(prompt_len=prompt_len, gen_len=gen_len, gbs=gbs, nbatch=ngb, percent=(wr[0], wr[1], kvr[0], kvr[1], ar[0], ar[1]), model_name="facebook/opt-30b").get_cmd())
+    for prompt_len in prompt_lens
+    for gen_len in gen_lens
+    for wr in [(100, 0)]
+    for kvr in kv_ratios
+    for ar in actv_ratios
+    for gbs in gpu_block_sizes
+    for ngb in num_gpu_blocks
+    if invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb)
+]
+
 suites = {
     "30b_allcpu": suite_30b_allcpu,
+    "30b_2575": suite_30b_2575,
+    "30b_5050": suite_30b_5050,
+    "30b_7525": suite_30b_7525,
+    "30b_allgpu": suite_30b_allgpu,
     "1b3_test": suite_1b3_test,
 
     "6b7_1x1": suite_6b7_1x1,
@@ -234,7 +287,7 @@ if __name__ == "__main__":
 
     for suite in args.suite:
         cases = suites[suite]
-        for case in cases:
+        for case in tqdm.tqdm(cases):
             config, name, use_page_maga = case.command, case.name, case.use_page_maga
             cmd = f"python -m flexllmgen.flex_opt {config}"
             if log_file:
