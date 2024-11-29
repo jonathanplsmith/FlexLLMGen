@@ -1271,9 +1271,9 @@ def run_flexllmgen(args):
     else:
         filename = args.log_file
     
-    latencies = LatencyResults(prefill_latency=prefill_latency, decode_latency=decode_latency)
-    with open(get_filename(args) + ".pkl", "wb") as f:
-        pickle.dump(latencies, f)
+    #latencies = LatencyResults(prefill_latency=prefill_latency, decode_latency=decode_latency)
+    #with open(get_filename(args) + ".pkl", "wb") as f:
+    #    pickle.dump(latencies, f)
     log_str = write_benchmark_log(filename,
         opt_config.model_bytes(), cache_size, hidden_size,
         gpu_peak_mem, projected, prefill_latency, prefill_throughput,

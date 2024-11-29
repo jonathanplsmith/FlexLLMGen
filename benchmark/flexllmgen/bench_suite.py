@@ -153,12 +153,55 @@ suite_175b_stage = [
     Case("--model facebook/opt-175b-stage --path _DUMMY_ --pin-weight 0 --percent 0 100 0 100 0 100 --gpu-batch-size 32 --num-gpu-batches 6 --cpu --debug fewer_batch", "", True),
 ]
 
-suite_30b_custom = [
-    Case("--model facebook/opt-30b --path _DUMMY_ --gpu-batch-size 4 --num-gpu-batches 2 --percent 100 0 100 0 100 0 --pin-weight 0 --cpu --prompt-len 161 --gen-len 337 --debug fewer_batch")
+class ExpConfig:
+    def __init__(self, prompt_len, gen_len, gbs, nbatch, percent, model_name="facebook/opt-30b"):
+        self.prompt_len = prompt_len
+        self.gen_len = gen_len
+        self.model_name = model_name
+        self.gbs = gbs # GPU batch size
+        self.nbatch = nbatch # Number of batches
+        self.percent = percent
+    
+    def get_cmd(self):
+        return f"--model {self.model_name} --path _DUMMY_ --offload-dir /capstor/scratch/cscs/jsmith/flexllmgen_offload_dir/ --prompt-len {self.prompt_len} --gen-len {self.gen_len} --percent {self.percent[0]} {self.percent[1]} {self.percent[2]} {self.percent[3]} {self.percent[4]} {self.percent[5]} --gpu-batch-size {self.gbs} --num-gpu-batches {self.nbatch}"
+
+GiB = 1<<30
+
+# Make sure we don't OOM
+def invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb):
+    batch_size = gbs*ngb
+    ratio_cpu_w = wr[1] / 100
+    ratio_gpu_w = wr[0] / 100
+    ratio_cpu_kv = kvr[1] / 100
+    ratio_gpu_kv = kvr[0] / 100
+    seqlen = prompt_len + gen_len
+    kv_cache_total = 2 * batch_size * seqlen * 48  * 7168 * 2
+    model_total = 65 * GiB
+    gpu_total = kv_cache_total * ratio_gpu_kv + model_total * ratio_gpu_w
+    cpu_total = kv_cache_total * ratio_cpu_kv + model_total * ratio_cpu_w
+    return (gpu_total <= (90*GiB)) and (cpu_total <= (100*GiB))
+
+prompt_lens = [161]
+gen_lens = [338]
+kv_ratios = [(100, 0)]
+actv_ratios = [(100, 0)]
+gpu_block_sizes = [4, 8, 16, 32, 64, 128, 256]
+num_gpu_blocks = [3, 8, 12, 24]
+
+suite_30b_allcpu = [
+    Case(ExpConfig(prompt_len=prompt_len, gen_len=gen_len, gbs=gbs, nbatch=ngb, percent=(wr[0], wr[1], kvr[0], kvr[1], ar[0], ar[1]), model_name="facebook/opt-30b").get_cmd())
+    for prompt_len in prompt_lens
+    for gen_len in gen_lens
+    for wr in [(0, 100)]
+    for kvr in kv_ratios
+    for ar in actv_ratios
+    for gbs in gpu_block_sizes
+    for ngb in num_gpu_blocks
+    if invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb)
 ]
 
 suites = {
-    "30b_custom": suite_30b_custom,
+    "30b_allcpu": suite_30b_allcpu,
     "1b3_test": suite_1b3_test,
 
     "6b7_1x1": suite_6b7_1x1,
