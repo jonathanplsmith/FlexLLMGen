@@ -42,22 +42,22 @@ def invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb):
     ratio_cpu_kv = kvr[1] / 100
     ratio_gpu_kv = kvr[0] / 100
     seqlen = prompt_len + gen_len
-    kv_cache_total = 2 * batch_size * seqlen * 64 * 9126 * 2
-    model_total = 122
+    kv_cache_total = 2 * batch_size * seqlen * 48  * 7168 * 2
+    model_total = 65 * GiB
     gpu_total = kv_cache_total * ratio_gpu_kv + model_total * ratio_gpu_w
     cpu_total = kv_cache_total * ratio_cpu_kv + model_total * ratio_cpu_w
-    return gpu_total <= 90*GiB and cpu_total <= 400*GiB
+    return (gpu_total <= (90*GiB)) and (cpu_total <= (100*GiB))
 
 #cases = [ExpConfig(prompt_len=512, gen_len=512, gbs=4, bls=4, percent=(50, 50, 50, 50, 100, 0))]
 prompt_lens = [32, 128, 256]
 gen_lens = [32, 256, 512]
-weight_ratios = [(0, 100), (50, 50)]
-kv_ratios = [(0, 100), (100, 0)]
+weight_ratios = [(0, 100), (66, 34), (50, 50), (100, 0)]
+kv_ratios = [(0, 100), (50, 50), (100, 0)]
 actv_ratios = [(100, 0)]
 gpu_block_sizes = [32, 64, 128, 256]
 num_gpu_blocks = [3, 8, 12, 24]
 cases = [
-    ExpConfig(prompt_len=prompt_len, gen_len=gen_len, gbs=gbs, bls=gbs*ngb, percent=(wr[0], wr[1], kvr[0], kvr[1], ar[0], ar[1]))
+    ExpConfig(prompt_len=prompt_len, gen_len=gen_len, gbs=gbs, bls=gbs*ngb, percent=(wr[0], wr[1], kvr[0], kvr[1], ar[0], ar[1]), model_name="facebook/opt-30b")
     for prompt_len in prompt_lens
     for gen_len in gen_lens
     for wr in weight_ratios

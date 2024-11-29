@@ -61,24 +61,24 @@ class CostModelConfig:
 
     # hardware constants
     # default value aligned on google cloud T4
-    ctog_bdw: float = 12.89 * GB
-    gtoc_bdw_cache: float = 0.97 * GB
-    gtoc_bdw_hidden: float = 4.82 * GB
+    ctog_bdw: float = 315.8159 * GB
+    gtoc_bdw_cache: float = 11.2202 * GB
+    gtoc_bdw_hidden: float = 19.2109 * GB
 
-    dtoc_bdw: float = 0.473 * GB
-    ctod_bdw_cache_p: float = 0.746 * GB
-    ctod_bdw_hidden_p: float = 2.015 * GB
-    ctod_bdw_g: float = 2.015 * GB
+    dtoc_bdw: float = 2.0151 * GB
+    ctod_bdw_cache_p: float = 2.0151 * GB
+    ctod_bdw_hidden_p: float = 2.0151 * GB
+    ctod_bdw_g: float = 2.0151 * GB
 
-    mm_flops_p: float = 21.24 * T
-    mm_flops_g: float = 4.3 * T
-    bmm_flops_p: float = 9.97 * T
-    bmm_flops_g: float = 0.079 * T
-    cpu_flops: float = 0.0123 * T
+    mm_flops_p: float = 574.4268 * T
+    mm_flops_g: float = 123.5456 * T
+    bmm_flops_p: float = 271.0304 * T
+    bmm_flops_g: float = 3.6272 * T
+    cpu_flops: float = 0.0326 * T
 
-    c1: float = 0.0168
-    c2: float = 0.0328
-    c3: float = 0.0621
+    c1: float = 0.0
+    c2: float = 0.0197
+    c3: float = 0.0
 
 
 def solve_lp(config, bls, gbs, compress_w=False, verbose=1, debug=False, percent=None):

@@ -1,5 +1,6 @@
 # Squashfile
 flexgen.sqsh
+experimental/experiments/results/*
 
 # Mac system files
 .DS_store
