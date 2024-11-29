@@ -15,7 +15,7 @@ from torch import nn
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from experiments.run_exp import ExpConfig, cases, get_filename
+from experiments.run_exp import ExpConfig, cases, get_filename, LatencyResults
 from flexllmgen.opt_config import get_opt_config
 from flexllmgen.utils import GB, T
 
@@ -98,7 +98,7 @@ class CostModel(nn.Module):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pkl-dir", type=str, default="../experiments/results")
+    parser.add_argument("--pkl-dir", type=str, default="./experiments/results")
     args = parser.parse_args()
     torch.manual_seed(0)
 
@@ -110,6 +110,7 @@ if __name__ == "__main__":
     dataset = []
     for case in cases:
         pkl_file = os.path.join(args.pkl_dir, get_filename(case) + ".pkl")
+        print(pkl_file)
         if os.path.exists(pkl_file):
             with open(pkl_file, "rb") as f:
                 stats = pkl.load(f)

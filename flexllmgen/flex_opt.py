@@ -1176,6 +1176,10 @@ def get_test_inputs(prompt_len, num_prompts, tokenizer):
                           max_length=prompt_len).input_ids
     return (input_ids[0],) * num_prompts
 
+@dataclasses.dataclass
+class LatencyResults:
+    prefill_latency: float = 0.0
+    decode_latency: float = 0.0
 
 def run_flexllmgen(args):
     print(f"<run_flexllmgen>: args.model: {args.model}")
@@ -1266,7 +1270,10 @@ def run_flexllmgen(args):
         filename = get_filename(args) + ".log"
     else:
         filename = args.log_file
-
+    
+    latencies = LatencyResults(prefill_latency=prefill_latency, decode_latency=decode_latency)
+    with open(get_filename(args) + ".pkl", "wb") as f:
+        pickle.dump(latencies, f)
     log_str = write_benchmark_log(filename,
         opt_config.model_bytes(), cache_size, hidden_size,
         gpu_peak_mem, projected, prefill_latency, prefill_throughput,

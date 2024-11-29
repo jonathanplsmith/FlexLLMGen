@@ -153,6 +153,10 @@ suite_175b_stage = [
     Case("--model facebook/opt-175b-stage --path _DUMMY_ --pin-weight 0 --percent 0 100 0 100 0 100 --gpu-batch-size 32 --num-gpu-batches 6 --cpu --debug fewer_batch", "", True),
 ]
 
+suite_66b_1x1 = [
+    #
+]
+
 suites = {
     "1b3_test": suite_1b3_test,
 
