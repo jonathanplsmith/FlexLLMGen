@@ -1,6 +1,7 @@
 # Squashfile
 flexgen.sqsh
 experimental/experiments/results/*
+benchmark/flexllmgen/results/*
 
 # Mac system files
 .DS_store

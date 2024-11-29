@@ -182,8 +182,8 @@ def invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb):
     cpu_total = kv_cache_total * ratio_cpu_kv + model_total * ratio_cpu_w
     return (gpu_total <= (90*GiB)) and (cpu_total <= (100*GiB))
 
-prompt_lens = [1024]
-gen_lens = [1024]
+prompt_lens = [161]
+gen_lens = [338]
 kv_ratios = [(100, 0)]
 actv_ratios = [(100, 0)]
 gpu_block_sizes = [4, 8, 16, 32, 64, 128, 256]
