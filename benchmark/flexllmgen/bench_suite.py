@@ -155,16 +155,17 @@ suite_175b_stage = [
 ]
 
 class ExpConfig:
-    def __init__(self, prompt_len, gen_len, gbs, nbatch, percent, model_name="facebook/opt-30b"):
+    def __init__(self, prompt_len, gen_len, gbs, nbatch, percent, model_name="facebook/opt-30b", fewer_batch=False):
         self.prompt_len = prompt_len
         self.gen_len = gen_len
         self.model_name = model_name
         self.gbs = gbs # GPU batch size
         self.nbatch = nbatch # Number of batches
         self.percent = percent
+        self.fewer_batch = fewer_batch
     
     def get_cmd(self):
-        return f"--model {self.model_name} --path _DUMMY_ --offload-dir /capstor/scratch/cscs/jsmith/flexllmgen_offload_dir/ --prompt-len {self.prompt_len} --gen-len {self.gen_len} --percent {self.percent[0]} {self.percent[1]} {self.percent[2]} {self.percent[3]} {self.percent[4]} {self.percent[5]} --gpu-batch-size {self.gbs} --num-gpu-batches {self.nbatch} --debug fewer_batch"
+        return f"--model {self.model_name} --path _DUMMY_ --offload-dir /capstor/scratch/cscs/jsmith/flexllmgen_offload_dir/ --prompt-len {self.prompt_len} --gen-len {self.gen_len} --percent {self.percent[0]} {self.percent[1]} {self.percent[2]} {self.percent[3]} {self.percent[4]} {self.percent[5]} --gpu-batch-size {self.gbs} --num-gpu-batches {self.nbatch} {'--debug fewer_batch' if self.fewer_batch else ''}"
 
 GiB = 1<<30
 
@@ -249,12 +250,23 @@ suite_30b_allgpu = [
     if invariant(prompt_len, gen_len, wr, kvr, ar, gbs, ngb)
 ]
 
+suite_30b_bestparams = [
+   Case(ExpConfig(prompt_len=161, gen_len=338, gbs=32, nbatch=1, percent=(100, 0, 100, 0, 100, 0), model_name="facebook/opt-30b").get_cmd()),
+   Case(ExpConfig(prompt_len=161, gen_len=338, gbs=64, nbatch=1, percent=(75, 25, 100, 0, 100, 0), model_name="facebook/opt-30b").get_cmd()),
+   Case(ExpConfig(prompt_len=161, gen_len=338, gbs=64, nbatch=1, percent=(50, 50, 100, 0, 100, 0), model_name="facebook/opt-30b").get_cmd()),
+   Case(ExpConfig(prompt_len=161, gen_len=338, gbs=32, nbatch=3, percent=(25, 75, 100, 0, 100, 0), model_name="facebook/opt-30b").get_cmd()),
+   Case(ExpConfig(prompt_len=161, gen_len=338, gbs=64, nbatch=1, percent=(25, 75, 100, 0, 100, 0), model_name="facebook/opt-30b").get_cmd()),
+   Case(ExpConfig(prompt_len=161, gen_len=338, gbs=128, nbatch=1, percent=(0, 100, 100, 0, 100, 0), model_name="facebook/opt-30b").get_cmd())
+]
+
 suites = {
     "30b_allcpu": suite_30b_allcpu,
     "30b_2575": suite_30b_2575,
     "30b_5050": suite_30b_5050,
     "30b_7525": suite_30b_7525,
     "30b_allgpu": suite_30b_allgpu,
+    "30b_bestparams": suite_30b_bestparams,
+
     "1b3_test": suite_1b3_test,
 
     "6b7_1x1": suite_6b7_1x1,
